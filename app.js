@@ -1,9 +1,7 @@
 // ==========================================
 // IVAN SMART CONNECT
-// SUPABASE AUTHENTICATION
+// SUPABASE AUTH + USER PROFILES
 // ==========================================
-
-// 1. SUPABASE CONFIGURATION
 
 const SUPABASE_URL =
     "https://zzphccvryvjaonkoonil.supabase.co";
@@ -13,7 +11,7 @@ const SUPABASE_KEY =
 
 
 // ==========================================
-// 2. HTML ELEMENTS
+// HTML ELEMENTS
 // ==========================================
 
 const debugConsole =
@@ -51,7 +49,7 @@ const clearDebugBtn =
 
 
 // ==========================================
-// 3. DEBUG FUNCTION
+// DEBUG
 // ==========================================
 
 function debug(message) {
@@ -73,32 +71,10 @@ function debug(message) {
 
 
 // ==========================================
-// 4. CHECK SUPABASE LIBRARY
+// SUPABASE
 // ==========================================
 
 debug("Starting Ivan Smart Connect...");
-
-if (!window.supabase) {
-
-    debug(
-        "ERROR: Supabase library was NOT loaded."
-    );
-
-    status.textContent =
-        "Supabase library failed to load.";
-
-} else {
-
-    debug(
-        "Supabase library loaded successfully."
-    );
-
-}
-
-
-// ==========================================
-// 5. CREATE SUPABASE CLIENT
-// ==========================================
 
 let supabaseClient = null;
 
@@ -107,7 +83,7 @@ try {
     if (!window.supabase) {
 
         throw new Error(
-            "Supabase JavaScript library is unavailable."
+            "Supabase library was not loaded."
         );
     }
 
@@ -127,7 +103,7 @@ try {
 } catch (error) {
 
     debug(
-        "SUPABASE INITIALIZATION ERROR: " +
+        "SUPABASE ERROR: " +
         error.message
     );
 
@@ -137,7 +113,7 @@ try {
 
 
 // ==========================================
-// 6. LOGIN
+// LOGIN
 // ==========================================
 
 loginBtn.addEventListener(
@@ -155,52 +131,33 @@ loginBtn.addEventListener(
             passwordInput.value;
 
 
-        // Check email
-
         if (!email) {
 
             loginMessage.textContent =
                 "Please enter your email.";
 
-            debug(
-                "Login stopped: email is empty."
-            );
-
             return;
         }
 
-
-        // Check password
 
         if (!password) {
 
             loginMessage.textContent =
                 "Please enter your password.";
 
-            debug(
-                "Login stopped: password is empty."
-            );
-
             return;
         }
 
-
-        // Check Supabase
 
         if (!supabaseClient) {
 
-            loginMessage.textContent =
-                "Supabase client unavailable.";
-
             debug(
-                "Login stopped: Supabase client unavailable."
+                "Supabase client unavailable."
             );
 
             return;
         }
 
-
-        // Loading
 
         loginBtn.disabled = true;
 
@@ -240,11 +197,6 @@ loginBtn.addEventListener(
                 loginMessage.textContent =
                     error.message;
 
-                loginBtn.disabled = false;
-
-                loginBtn.textContent =
-                    "Login";
-
                 return;
             }
 
@@ -261,9 +213,10 @@ loginBtn.addEventListener(
                     data.user.email
                 );
 
-                showLoggedInUser(
+                await loadUserProfile(
                     data.user
                 );
+
             }
 
 
@@ -276,23 +229,94 @@ loginBtn.addEventListener(
 
             loginMessage.textContent =
                 error.message;
+
+        } finally {
+
+            loginBtn.disabled = false;
+
+            loginBtn.textContent =
+                "Login";
         }
-
-
-        loginBtn.disabled = false;
-
-        loginBtn.textContent =
-            "Login";
 
     }
 );
 
 
 // ==========================================
-// 7. SHOW LOGGED-IN USER
+// LOAD USER PROFILE
 // ==========================================
 
-function showLoggedInUser(user) {
+async function loadUserProfile(user) {
+
+    debug(
+        "Loading user profile..."
+    );
+
+
+    try {
+
+        const {
+            data,
+            error
+        } =
+            await supabaseClient
+                .from("profiles")
+                .select("*")
+                .eq("id", user.id)
+                .single();
+
+
+        if (error) {
+
+            debug(
+                "PROFILE ERROR: " +
+                error.message
+            );
+
+            loginMessage.textContent =
+                "Login successful, but profile could not be loaded.";
+
+            return;
+        }
+
+
+        debug(
+            "Profile loaded successfully."
+        );
+
+        debug(
+            "Name: " +
+            (data.full_name || "Not set")
+        );
+
+        debug(
+            "Role: " +
+            (data.role || "Not set")
+        );
+
+
+        showUserProfile(
+            user,
+            data
+        );
+
+    } catch (error) {
+
+        debug(
+            "PROFILE EXCEPTION: " +
+            error.message
+        );
+
+    }
+
+}
+
+
+// ==========================================
+// DISPLAY PROFILE
+// ==========================================
+
+function showUserProfile(user, profile) {
 
     loginSection.style.display =
         "none";
@@ -301,32 +325,70 @@ function showLoggedInUser(user) {
         "block";
 
     userEmail.textContent =
-        user.email || "User";
+        profile.email || user.email;
 
     status.textContent =
-        "You are logged in.";
+        "Welcome, " +
+        (profile.full_name || "User") +
+        "!";
+
+    // Add name and role to user section
+
+    const existingProfile =
+        document.getElementById(
+            "profileInfo"
+        );
+
+    if (existingProfile) {
+
+        existingProfile.remove();
+
+    }
+
+
+    const profileInfo =
+        document.createElement("div");
+
+    profileInfo.id =
+        "profileInfo";
+
+    profileInfo.innerHTML = `
+        <p>
+            <strong>Name:</strong>
+            ${profile.full_name || "Not set"}
+        </p>
+
+        <p>
+            <strong>Role:</strong>
+            ${profile.role || "Not set"}
+        </p>
+    `;
+
+
+    userSection.insertBefore(
+        profileInfo,
+        logoutBtn
+    );
+
+
+    debug(
+        "User dashboard loaded."
+    );
 
 }
 
 
 // ==========================================
-// 8. LOGOUT
+// LOGOUT
 // ==========================================
 
 logoutBtn.addEventListener(
     "click",
     async function () {
 
-        debug("Logout button clicked.");
-
-        if (!supabaseClient) {
-
-            debug(
-                "Logout stopped: Supabase unavailable."
-            );
-
-            return;
-        }
+        debug(
+            "Logout button clicked."
+        );
 
 
         try {
@@ -353,7 +415,6 @@ logoutBtn.addEventListener(
 
             showLoggedOutUser();
 
-
         } catch (error) {
 
             debug(
@@ -368,7 +429,7 @@ logoutBtn.addEventListener(
 
 
 // ==========================================
-// 9. SHOW LOGGED-OUT USER
+// LOGGED OUT STATE
 // ==========================================
 
 function showLoggedOutUser() {
@@ -395,7 +456,7 @@ function showLoggedOutUser() {
 
 
 // ==========================================
-// 10. CHECK EXISTING SESSION
+// CHECK SESSION
 // ==========================================
 
 async function checkSession() {
@@ -406,10 +467,6 @@ async function checkSession() {
 
 
     if (!supabaseClient) {
-
-        debug(
-            "Session check stopped: Supabase unavailable."
-        );
 
         return;
     }
@@ -442,7 +499,7 @@ async function checkSession() {
                 "Existing session found."
             );
 
-            showLoggedInUser(
+            await loadUserProfile(
                 data.session.user
             );
 
@@ -455,7 +512,6 @@ async function checkSession() {
             showLoggedOutUser();
 
         }
-
 
     } catch (error) {
 
@@ -470,7 +526,7 @@ async function checkSession() {
 
 
 // ==========================================
-// 11. AUTH STATE LISTENER
+// AUTH STATE
 // ==========================================
 
 if (supabaseClient) {
@@ -483,19 +539,6 @@ if (supabaseClient) {
                 event
             );
 
-
-            if (session) {
-
-                showLoggedInUser(
-                    session.user
-                );
-
-            } else {
-
-                showLoggedOutUser();
-
-            }
-
         }
     );
 
@@ -503,7 +546,7 @@ if (supabaseClient) {
 
 
 // ==========================================
-// 12. CLEAR DEBUG CONSOLE
+// CLEAR DEBUG CONSOLE
 // ==========================================
 
 clearDebugBtn.addEventListener(
@@ -520,7 +563,7 @@ clearDebugBtn.addEventListener(
 
 
 // ==========================================
-// 13. START APPLICATION
+// START
 // ==========================================
 
 debug(
