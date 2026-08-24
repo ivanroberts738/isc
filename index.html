@@ -14,29 +14,71 @@
 
 <body>
 
-    <div class="container">
+    <main class="container">
 
         <h1>Ivan Smart Connect</h1>
 
-        <input
-            type="email"
-            id="email"
-            placeholder="Email"
-        >
+        <p id="status">Checking connection...</p>
 
-        <input
-            type="password"
-            id="password"
-            placeholder="Password"
-        >
+        <!-- Login Section -->
+        <section id="loginSection">
 
-        <button onclick="signup()">Sign Up</button>
+            <h2>Login</h2>
 
-        <button onclick="login()">Login</button>
+            <input
+                type="email"
+                id="email"
+                placeholder="Email address"
+                autocomplete="email"
+            >
 
-        <p id="message"></p>
+            <input
+                type="password"
+                id="password"
+                placeholder="Password"
+                autocomplete="current-password"
+            >
 
-    </div>
+            <button id="loginBtn">
+                Login
+            </button>
+
+            <p id="loginMessage"></p>
+
+        </section>
+
+        <!-- User Section -->
+        <section id="userSection" style="display: none;">
+
+            <h2>Welcome!</h2>
+
+            <p>
+                Logged in as:
+                <strong id="userEmail"></strong>
+            </p>
+
+            <button id="logoutBtn">
+                Logout
+            </button>
+
+        </section>
+
+        <!-- Debug Console -->
+        <section id="debugSection">
+
+            <h3>Debug Console</h3>
+
+            <div id="debugConsole">
+                Starting...
+            </div>
+
+            <button id="clearDebugBtn">
+                Clear Console
+            </button>
+
+        </section>
+
+    </main>
 
     <script src="app.js"></script>
 
