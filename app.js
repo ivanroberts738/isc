@@ -1,45 +1,23 @@
-
 // ==========================================
 // IVAN SMART CONNECT
-// Supabase Authentication
+// SUPABASE AUTHENTICATION
 // ==========================================
 
-
-// ==========================================
 // 1. SUPABASE CONFIGURATION
-// ==========================================
 
-const supabaseUrl = "https://zzphccvryvjaonkoonil.supabase.co";
+const SUPABASE_URL =
+    "https://zzphccvryvjaonkoonil.supabase.co";
 
-const supabaseKey ="sb_publishable_BPZ5Cukc3D6ilo6e0_m1Aw_sN5FBK2D";
-
-
-// ==========================================
-// 2. DEBUG CONSOLE
-// ==========================================
-
-const debugConsole = document.getElementById("debugConsole");
-
-function debug(message) {
-
-    console.log(message);
-
-    if (debugConsole) {
-
-        const time = new Date().toLocaleTimeString();
-
-        debugConsole.innerHTML +=
-            `\n[${time}] ${message}`;
-
-        debugConsole.scrollTop =
-            debugConsole.scrollHeight;
-    }
-}
+const SUPABASE_KEY =
+    "sb_publishable_BPZ5Cukc3D6ilo6e0_m1Aw_sN5FBK2D";
 
 
 // ==========================================
-// 3. GET HTML ELEMENTS
+// 2. HTML ELEMENTS
 // ==========================================
+
+const debugConsole =
+    document.getElementById("debugConsole");
 
 const loginBtn =
     document.getElementById("loginBtn");
@@ -73,6 +51,28 @@ const clearDebugBtn =
 
 
 // ==========================================
+// 3. DEBUG FUNCTION
+// ==========================================
+
+function debug(message) {
+
+    console.log(message);
+
+    if (debugConsole) {
+
+        const time =
+            new Date().toLocaleTimeString();
+
+        debugConsole.innerHTML +=
+            `\n[${time}] ${message}`;
+
+        debugConsole.scrollTop =
+            debugConsole.scrollHeight;
+    }
+}
+
+
+// ==========================================
 // 4. CHECK SUPABASE LIBRARY
 // ==========================================
 
@@ -80,14 +80,18 @@ debug("Starting Ivan Smart Connect...");
 
 if (!window.supabase) {
 
-    debug("ERROR: Supabase library was not loaded.");
+    debug(
+        "ERROR: Supabase library was NOT loaded."
+    );
 
     status.textContent =
         "Supabase library failed to load.";
 
 } else {
 
-    debug("Supabase library loaded successfully.");
+    debug(
+        "Supabase library loaded successfully."
+    );
 
 }
 
@@ -100,35 +104,35 @@ let supabaseClient = null;
 
 try {
 
-    if (
-        SUPABASE_URL === "YOUR_SUPABASE_URL" ||
-        SUPABASE_KEY === "YOUR_SUPABASE_PUBLISHABLE_KEY"
-    ) {
+    if (!window.supabase) {
 
-        debug("WARNING: Supabase credentials have not been added.");
-
-    } else {
-
-        supabaseClient =
-            window.supabase.createClient(
-                SUPABASE_URL,
-                SUPABASE_KEY
-            );
-
-        debug("Supabase client created successfully.");
-
-        status.textContent =
-            "Supabase connected.";
-
+        throw new Error(
+            "Supabase JavaScript library is unavailable."
+        );
     }
+
+    supabaseClient =
+        window.supabase.createClient(
+            SUPABASE_URL,
+            SUPABASE_KEY
+        );
+
+    debug(
+        "Supabase client created successfully."
+    );
+
+    status.textContent =
+        "Supabase connected.";
 
 } catch (error) {
 
     debug(
-        "Supabase initialization error: " +
+        "SUPABASE INITIALIZATION ERROR: " +
         error.message
     );
 
+    status.textContent =
+        "Supabase connection failed.";
 }
 
 
@@ -136,135 +140,152 @@ try {
 // 6. LOGIN
 // ==========================================
 
-loginBtn.addEventListener("click", async function () {
+loginBtn.addEventListener(
+    "click",
+    async function () {
 
-    debug("Login button clicked.");
+        debug("Login button clicked.");
 
-    loginMessage.textContent = "";
+        loginMessage.textContent = "";
 
-    const email =
-        emailInput.value.trim();
+        const email =
+            emailInput.value.trim();
 
-    const password =
-        passwordInput.value;
-
-    // Check email
-    if (!email) {
-
-        loginMessage.textContent =
-            "Please enter your email.";
-
-        debug("Login stopped: email is empty.");
-
-        return;
-    }
+        const password =
+            passwordInput.value;
 
 
-    // Check password
-    if (!password) {
+        // Check email
 
-        loginMessage.textContent =
-            "Please enter your password.";
-
-        debug("Login stopped: password is empty.");
-
-        return;
-    }
-
-
-    // Check Supabase
-    if (!supabaseClient) {
-
-        loginMessage.textContent =
-            "Supabase is not connected.";
-
-        debug(
-            "Login stopped: Supabase client unavailable."
-        );
-
-        return;
-    }
-
-
-    // Loading state
-    loginBtn.disabled = true;
-
-    loginBtn.textContent =
-        "Logging in...";
-
-    debug(
-        "Attempting login for: " + email
-    );
-
-
-    try {
-
-        const {
-            data,
-            error
-        } =
-            await supabaseClient.auth.signInWithPassword({
-
-                email: email,
-
-                password: password
-
-            });
-
-
-        // Error
-        if (error) {
-
-            debug(
-                "LOGIN ERROR: " +
-                error.message
-            );
+        if (!email) {
 
             loginMessage.textContent =
-                error.message;
+                "Please enter your email.";
 
-            loginBtn.disabled = false;
-
-            loginBtn.textContent =
-                "Login";
+            debug(
+                "Login stopped: email is empty."
+            );
 
             return;
         }
 
 
-        // Success
-        debug("Login successful.");
+        // Check password
 
-        if (data.user) {
+        if (!password) {
+
+            loginMessage.textContent =
+                "Please enter your password.";
 
             debug(
-                "User ID: " +
-                data.user.id
+                "Login stopped: password is empty."
             );
 
-            showLoggedInUser(data.user);
-
+            return;
         }
 
-    } catch (error) {
+
+        // Check Supabase
+
+        if (!supabaseClient) {
+
+            loginMessage.textContent =
+                "Supabase client unavailable.";
+
+            debug(
+                "Login stopped: Supabase client unavailable."
+            );
+
+            return;
+        }
+
+
+        // Loading
+
+        loginBtn.disabled = true;
+
+        loginBtn.textContent =
+            "Logging in...";
+
 
         debug(
-            "Unexpected login error: " +
-            error.message
+            "Attempting login for: " +
+            email
         );
 
-        loginMessage.textContent =
-            "Something went wrong.";
+
+        try {
+
+            const {
+                data,
+                error
+            } =
+                await supabaseClient.auth
+                    .signInWithPassword({
+
+                        email: email,
+
+                        password: password
+
+                    });
+
+
+            if (error) {
+
+                debug(
+                    "LOGIN ERROR: " +
+                    error.message
+                );
+
+                loginMessage.textContent =
+                    error.message;
+
+                loginBtn.disabled = false;
+
+                loginBtn.textContent =
+                    "Login";
+
+                return;
+            }
+
+
+            debug(
+                "LOGIN SUCCESSFUL!"
+            );
+
+
+            if (data.user) {
+
+                debug(
+                    "Logged in as: " +
+                    data.user.email
+                );
+
+                showLoggedInUser(
+                    data.user
+                );
+            }
+
+
+        } catch (error) {
+
+            debug(
+                "LOGIN EXCEPTION: " +
+                error.message
+            );
+
+            loginMessage.textContent =
+                error.message;
+        }
+
+
+        loginBtn.disabled = false;
+
+        loginBtn.textContent =
+            "Login";
 
     }
-
-
-    loginBtn.disabled = false;
-
-    loginBtn.textContent =
-        "Login";
-
-});
+);
 
 
 // ==========================================
@@ -285,10 +306,6 @@ function showLoggedInUser(user) {
     status.textContent =
         "You are logged in.";
 
-    debug(
-        "Displaying logged-in user."
-    );
-
 }
 
 
@@ -296,55 +313,62 @@ function showLoggedInUser(user) {
 // 8. LOGOUT
 // ==========================================
 
-logoutBtn.addEventListener("click", async function () {
+logoutBtn.addEventListener(
+    "click",
+    async function () {
 
-    debug("Logout button clicked.");
+        debug("Logout button clicked.");
 
-    if (!supabaseClient) {
-
-        debug(
-            "Logout failed: Supabase client unavailable."
-        );
-
-        return;
-    }
-
-
-    try {
-
-        const { error } =
-            await supabaseClient.auth.signOut();
-
-
-        if (error) {
+        if (!supabaseClient) {
 
             debug(
-                "LOGOUT ERROR: " +
-                error.message
+                "Logout stopped: Supabase unavailable."
             );
 
             return;
         }
 
 
-        debug("Logout successful.");
+        try {
 
-        showLoggedOutUser();
+            const { error } =
+                await supabaseClient.auth
+                    .signOut();
 
-    } catch (error) {
 
-        debug(
-            "Unexpected logout error: " +
-            error.message
-        );
+            if (error) {
+
+                debug(
+                    "LOGOUT ERROR: " +
+                    error.message
+                );
+
+                return;
+            }
+
+
+            debug(
+                "Logout successful."
+            );
+
+            showLoggedOutUser();
+
+
+        } catch (error) {
+
+            debug(
+                "LOGOUT EXCEPTION: " +
+                error.message
+            );
+
+        }
 
     }
-
-});
+);
 
 
 // ==========================================
-// 9. SHOW LOGGED-OUT STATE
+// 9. SHOW LOGGED-OUT USER
 // ==========================================
 
 function showLoggedOutUser() {
@@ -376,12 +400,15 @@ function showLoggedOutUser() {
 
 async function checkSession() {
 
-    debug("Checking existing session...");
+    debug(
+        "Checking existing session..."
+    );
+
 
     if (!supabaseClient) {
 
         debug(
-            "Session check skipped: Supabase unavailable."
+            "Session check stopped: Supabase unavailable."
         );
 
         return;
@@ -394,7 +421,8 @@ async function checkSession() {
             data,
             error
         } =
-            await supabaseClient.auth.getSession();
+            await supabaseClient.auth
+                .getSession();
 
 
         if (error) {
@@ -428,10 +456,11 @@ async function checkSession() {
 
         }
 
+
     } catch (error) {
 
         debug(
-            "Session check error: " +
+            "SESSION EXCEPTION: " +
             error.message
         );
 
@@ -441,7 +470,7 @@ async function checkSession() {
 
 
 // ==========================================
-// 11. LISTEN FOR AUTH CHANGES
+// 11. AUTH STATE LISTENER
 // ==========================================
 
 if (supabaseClient) {
@@ -450,7 +479,8 @@ if (supabaseClient) {
         function (event, session) {
 
             debug(
-                "Auth event: " + event
+                "Auth event: " +
+                event
             );
 
 
@@ -493,6 +523,8 @@ clearDebugBtn.addEventListener(
 // 13. START APPLICATION
 // ==========================================
 
-debug("app.js loaded successfully.");
+debug(
+    "app.js loaded successfully."
+);
 
 checkSession();
